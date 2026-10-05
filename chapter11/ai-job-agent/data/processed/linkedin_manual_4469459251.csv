@@ -1,0 +1,23 @@
+﻿company_name,job_title,career,location,posted_date,closing_date,job_url,search_keyword,collected_at,job_description,qualifications,preferred_qualifications,source_site,collection_method,excluded_from_analysis,exclusion_reason,exclusion_decided_at,cleaned_at,is_new,new_check_at,job_intro,posted_date_display_raw,apply_click_display_raw,skill_match_excluded_note,work_arrangement,employment_type,gemini_test_input,gemini_test_prepared_at,gemini_model,gemini_response_raw,gemini_called_at,job_type_corrected,job_type_correction_note,job_type_corrected_at
+쿠팡,[쿠팡] CS Specialist (데이터 분석 & AI),SQL 데이터 추출·분석 실무 경험 2년 이상,대한민국 서울,,,https://www.linkedin.com/jobs/view/4469459251/,AI 엔지니어,2026-10-04T18:04:59.014758+09:00,"SQL을 활용한 비즈니스 데이터 추출, 분석 및 시각화 / 생성형 AI 기반 CS 운영 효율화 과제 발굴 및 솔루션 기획 / LLM(OpenAI, Claude, Gemini 등)을 활용한 업무 자동화 워크플로우 설계 및 운영 / AI Agent, RAG 등 AI 기술을 활용한 운영 프로세스 개선 및 서비스 개발 / AI 솔루션 성과 분석 및 데이터 기반 의사결정 체계 고도화","2년 이상의 SQL을 활용한 데이터 추출 및 분석 실무 경험이 있으신 분 / 복잡한 데이터를 구조화하여 비즈니스 인사이트를 도출할 수 있는 분 / 개발 조직과 원활하게 협업할 수 있는 수준의 기술 이해도를 보유하신 분 / OpenAI, Claude, Gemini 등 LLM을 활용한 AI 자동화 또는 업무 적용 경험이 있으신 분 / 주도적이고 유연한 커뮤니케이션 역량을 보유하신 분","로그 및 이벤트 분석, 시스템 운영 자동화 경험이 있으신 분 / AI Agent 개발 및 Retriever 구성 경험이 있으신 분 / n8n / Zapier Low code 자동화 경험이 있으신 분 / Java script / Python을 활용한 개발 경험이 있으신 분",LinkedIn,manual_copy,True,"사용자의 대상 선정 결정으로 이번 'AI 엔지니어' 분석 대상에서 제외됨. 이 공고에 AI 관련 업무가 없다는 판정이 아니며, 원본 내용(job_description 등)은 그대로 보존됨.",2026-10-04T18:04:59.034805+09:00,2026-10-04T18:04:59.067037+09:00,True,2026-10-04T18:04:59.083112+09:00,"인하우스 전문 상담사인 Counie (Customer Service Associate) 인력 및 KPI 성과를 데이터베이스화하고 추적 관리하는 팀입니다. 또한, 비즈니스 팀에서 필요로 하는 데이터를 추출/분석 제공 뿐만 아니라, 데이터 기반의 분석 및 의사 결정 체계의 고도화를 통하여 조직 성과를 극대화함을 물론, 나아가 AI를 활용한 운영 효율화 역할을 주도합니다.",1주 전,지원을 클릭한 사람 27,"원문에 '보유기술 매치 1/10' 표시가 있었으나, 이는 열람자 개인의 LinkedIn 프로필 매치 정보이고 공고 자체의 속성이 아니므로 분석/Gemini 입력에서 제외함.",재택·대면 혼합근무,정규직,"[[쿠팡] CS Specialist (데이터 분석 & AI)]
+근무지: 대한민국 서울 / 고용형태: 정규직 / 근무형태: 재택·대면 혼합근무
+
+[직무 소개]
+인하우스 전문 상담사인 Counie (Customer Service Associate) 인력 및 KPI 성과를 데이터베이스화하고 추적 관리하는 팀입니다. 또한, 비즈니스 팀에서 필요로 하는 데이터를 추출/분석 제공 뿐만 아니라, 데이터 기반의 분석 및 의사 결정 체계의 고도화를 통하여 조직 성과를 극대화함을 물론, 나아가 AI를 활용한 운영 효율화 역할을 주도합니다.
+
+[업무 내용]
+SQL을 활용한 비즈니스 데이터 추출, 분석 및 시각화 / 생성형 AI 기반 CS 운영 효율화 과제 발굴 및 솔루션 기획 / LLM(OpenAI, Claude, Gemini 등)을 활용한 업무 자동화 워크플로우 설계 및 운영 / AI Agent, RAG 등 AI 기술을 활용한 운영 프로세스 개선 및 서비스 개발 / AI 솔루션 성과 분석 및 데이터 기반 의사결정 체계 고도화
+
+[자격 요건]
+2년 이상의 SQL을 활용한 데이터 추출 및 분석 실무 경험이 있으신 분 / 복잡한 데이터를 구조화하여 비즈니스 인사이트를 도출할 수 있는 분 / 개발 조직과 원활하게 협업할 수 있는 수준의 기술 이해도를 보유하신 분 / OpenAI, Claude, Gemini 등 LLM을 활용한 AI 자동화 또는 업무 적용 경험이 있으신 분 / 주도적이고 유연한 커뮤니케이션 역량을 보유하신 분
+
+[우대 사항]
+로그 및 이벤트 분석, 시스템 운영 자동화 경험이 있으신 분 / AI Agent 개발 및 Retriever 구성 경험이 있으신 분 / n8n / Zapier Low code 자동화 경험이 있으신 분 / Java script / Python을 활용한 개발 경험이 있으신 분",2026-10-04T19:26:32.620393+09:00,gemini-3.8-flash,"```json
+{
+  ""주요_업무"": ""SQL을 활용한 비즈니스 데이터 추출, 분석 및 시각화 / 생성형 AI 기반 CS 운영 효율화 과제 발굴 및 솔루션 기획 / LLM(OpenAI, Claude, Gemini 등)을 활용한 업무 자동화 워크플로우 설계 및 운영 / AI Agent, RAG 등 AI 기술을 활용한 운영 프로세스 개선 및 서비스 개발 / AI 솔루션 성과 분석 및 데이터 기반 의사결정 체계 고도화"",
+  ""필수_요건"": ""2년 이상의 SQL을 활용한 데이터 추출 및 분석 실무 경험이 있으신 분 / 복잡한 데이터를 구조화하여 비즈니스 인사이트를 도출할 수 있는 분 / 개발 조직과 원활하게 협업할 수 있는 수준의 기술 이해도를 보유하신 분 / OpenAI, Claude, Gemini 등 LLM을 활용한 AI 자동화 또는 업무 적용 경험이 있으신 분 / 주도적이고 유연한 커뮤니케이션 역량을 보유하신 분"",
+  ""우대_사항"": ""로그 및 이벤트 분석, 시스템 운영 자동화 경험이 있으신 분 / AI Agent 개발 및 Retriever 구성 경험이 있으신 분 / n8n / Zapier Low code 자동화 경험이 있으신 분 / Java script / Python을 활용한 개발 경험이 있으신 분"",
+  ""명시된_기술"": ""SQL, LLM(OpenAI, Claude, Gemini), AI Agent, RAG, n8n, Zapier, Java script, Python"",
+  ""직무_유형"": ""정규직""
+}
+```",2026-10-04T19:42:29.877061+09:00,CS 운영 데이터 분석·AI 자동화,"Gemini 응답의 '직무_유형' 필드 값('정규직')은 실제로는 고용형태(employment_type)와 동일한 값이었다 — 직무 유형이 아니라 고용형태를 답한 것으로 판단해 분리했다. 직무 유형은 본문(공고 제목·직무 소개)에 근거해 사용자가 직접 'CS 운영 데이터 분석·AI 자동화'로 정리했다. 추가 Gemini API 호출 없이, 기존 응답과 원문만으로 수정함.",2026-10-04T19:50:06.564316+09:00
