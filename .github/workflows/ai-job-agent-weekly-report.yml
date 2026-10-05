@@ -1,0 +1,83 @@
+# ai-job-agent (chapter11) 파이프라인을 GitHub Actions에서 실행하는 워크플로.
+#
+# 지금은 "수동 실행(workflow_dispatch)"만 켜져 있습니다. 아래 schedule(자동 정기 실행)은
+# 일부러 주석으로 남겨뒀습니다 — 실제 자동 실행 일정은 사용자 확인 후에 주석을 풀 예정입니다
+# (STEP 18, docs/GUIDE.md 참고).
+#
+# 기본 실행은 dry-run입니다(실제 Gemini 호출·Slack/Gmail 발송 없음). `live` 입력을 true로 주면
+# 그때만 .env 대신 GitHub Secrets 값으로 실제 호출/발송을 시도합니다.
+#
+# LinkedIn 공고 입력은 자동 수집이 아니라 여전히 "사용자 수동 입력"입니다 — 이 워크플로는
+# data/processed/에 이미 저장된 레코드를 읽어 정제·분석·보고서·전송만 수행하며, LinkedIn에서
+# 새로 크롤링하지 않습니다(robots.txt 차단 확인됨, SPEC.md 2장 참고).
+
+name: ai-job-agent weekly report (chapter11)
+
+on:
+  workflow_dispatch:
+    inputs:
+      live:
+        description: "true면 실제 Gemini 호출 + Slack/Gmail 발송(Secrets 필요). false(기본)면 dry-run만 실행."
+        required: false
+        default: false
+        type: boolean
+  # schedule:
+  #   # 예시(아직 비활성화): 매주 월요일 09:00 KST = 00:00 UTC. 사용자 확인 후 주석 해제 예정.
+  #   # ⚠️ schedule 트리거는 기본 브랜치(main)에 이 파일이 있어야만 동작합니다.
+  #   - cron: "0 0 * * 1"
+
+permissions:
+  contents: write  # live 실행 후 이력 파일(history_linkedin_manual.csv)을 커밋해 복원 가능하게 하려면 필요
+
+defaults:
+  run:
+    working-directory: chapter11/ai-job-agent
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Python 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          # 참고: 3.14는 최신 버전이라 ubuntu-latest 러너에 바로 없을 수 있습니다.
+          # 실제 Actions 실행에서 이 단계가 실패하면 "3.12" 등으로 낮춰서 다시 시도하세요.
+
+      - name: 의존성 설치
+        run: pip install -r requirements.txt
+
+      - name: 파이프라인 실행 (기본 dry-run, live=true일 때만 실제 호출/발송)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          GMAIL_TO_ADDRESS: ${{ secrets.GMAIL_TO_ADDRESS }}
+        run: |
+          if [ "${{ inputs.live }}" = "true" ]; then
+            echo "LIVE 모드로 실행합니다 (실제 Gemini 호출 + 실제 Slack/Gmail 발송)"
+            python main.py --live
+          else
+            echo "dry-run 모드로 실행합니다 (외부 호출·발송 없음)"
+            python main.py
+          fi
+
+      - name: 생성된 보고서를 아티팩트로 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-report
+          path: chapter11/ai-job-agent/reports/*.md
+          if-no-files-found: warn
+
+      - name: 운영 이력 파일 커밋 (live 실행일 때만 — 신규판별 이력을 다음 실행에 남기기 위함)
+        if: ${{ inputs.live == true }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/processed/history_linkedin_manual.csv
+          git diff --cached --quiet || git commit -m "chore(ai-job-agent): update job history [automated]"
+          git push
