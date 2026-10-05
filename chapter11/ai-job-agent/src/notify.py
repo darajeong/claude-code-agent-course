@@ -1,10 +1,25 @@
 """전송 단계 — Slack(STEP 12)·Gmail(STEP 13).
 
 `dry_run=True`(기본값)이면 실제 네트워크 요청을 전혀 보내지 않고, 무엇을 보낼 예정이었는지만
-돌려준다. `dry_run=False`일 때만 실제로 전송한다 — 이번 작업에서는 `dry_run=False` 경로를
-실행하지 않았다.
+돌려준다. `dry_run=False`일 때만 실제로 전송한다.
+
+2026-10-05: 채널별 성공/실패를 이력에 정확히 반영해야 하므로(실패 시 자동 재발송 금지, 성공한
+채널에는 같은 공고를 중복 발송하지 않음), **예외를 바깥으로 흘려보내지 않고** 항상 구조화된 dict로
+결과를 돌려주도록 두 함수 모두 바꿨다 — 호출하는 쪽은 `notify.is_success(result)`로 성공 여부만
+간단히 판단하면 된다.
 """
 from typing import Optional
+
+
+def is_success(result: dict) -> bool:
+    """`send_slack`/`send_gmail`의 반환값에서 "실제로 성공했는지"만 뽑아낸다(dry-run은 성공으로 치지 않음)."""
+    if result.get("dry_run"):
+        return False
+    if result.get("status") == "sent":
+        return True
+    if result.get("status_code") == 200:
+        return True
+    return False
 
 
 def send_slack(webhook_url: Optional[str], text: str, dry_run: bool = True) -> dict:
@@ -15,7 +30,10 @@ def send_slack(webhook_url: Optional[str], text: str, dry_run: bool = True) -> d
 
     import requests
 
-    resp = requests.post(webhook_url, json={"text": text}, timeout=10)
+    try:
+        resp = requests.post(webhook_url, json={"text": text}, timeout=10)
+    except requests.RequestException as exc:
+        return {"dry_run": False, "status": "error", "error": f"{type(exc).__name__}: {exc}"}
     return {"dry_run": False, "status_code": resp.status_code, "body": resp.text}
 
 
@@ -45,8 +63,11 @@ def send_gmail(
     msg["From"] = address
     msg["To"] = to_address
 
-    with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
-        server.starttls()
-        server.login(address, app_password)
-        server.sendmail(address, [to_address], msg.as_string())
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
+            server.starttls()
+            server.login(address, app_password)
+            server.sendmail(address, [to_address], msg.as_string())
+    except (smtplib.SMTPException, OSError) as exc:
+        return {"dry_run": False, "status": "error", "error": f"{type(exc).__name__}: {exc}"}
     return {"dry_run": False, "status": "sent"}

@@ -1013,6 +1013,510 @@
   사용자가 다시 요청하면 workflow의 `schedule:` 주석을 해제하고(cron 값은 이미 보존됨), main PR을 리뷰·merge
   하는 단계로 돌아간다.
 
+### 2026-10-05 세션 (잡코리아 자동 수집 가능성 검증 — STEP 18 재개 전 사전 조사)
+
+- 담당 에이전트: Claude Code
+- 경로·브랜치: `C:\dev\claude-code-agent-course\chapter11\ai-job-agent`, 브랜치 `ax-job-agent`
+- 시작 STEP: STEP 18 보류 직후 — 사용자가 "먼저 잡코리아 자동 수집 가능성을 검증한 뒤 예약 설정을
+  이어가겠다"고 한 뒤, 그 검증의 구체적 범위를 지정한 요청("앞서 정한 범위대로 잡코리아 자동 수집 가능성을
+  검증해줘")에 따라 진행.
+- 목표: (1) robots.txt와 이용약관을 확인해 자동 수집 제한을 설명하되 robots.txt만으로 허용을 단정하지 않음,
+  (2) 'AI 엔지니어' 검색어의 실제 검색 URL 제시, (3) 공고 3건의 제목·회사·URL·업무·자격요건 읽기 가능 여부를
+  표로 제시, (4) 본문이 이미지이거나 접근이 막히면 그 사실을 표시하고 추측하지 않음, (5) LinkedIn 데이터와
+  섞지 않고 Notebook 3셀 규칙·진행 문서에 기록. Gemini 호출, Slack·메일 발송, 예약 활성화는 하지 않음.
+- 수정 파일:
+  - `notebooks/ax_job_pipeline.backup-2026-10-05-pre-jobkorea-feasibility.ipynb`(수정 전 백업, 신규)
+  - `notebooks/ax_job_pipeline.ipynb` — "[신규 조사] 잡코리아 자동 수집 가능성 검증" 블록(계획/코드/해석
+    3셀) 추가(91→94셀). 기존 셀은 전혀 수정하지 않음.
+  - `docs/STATUS.md` — "마지막 갱신", "다음 작업"(검증 완료 반영, 사용자 선택지 4가지 제시), 새 섹션
+    "잡코리아 자동 수집 가능성 검증" 추가.
+  - 이 파일(`WORK_LOG.md`)
+  - LinkedIn 관련 파일(`linkedin_manual_4469459251.csv`, `history_linkedin_manual.csv`)은 코드에서 경로
+    자체를 참조하지 않았고, 작업 전후 파일 수정 시각이 불변임을 `ls -la`로 재확인함.
+- 실행 명령(에이전트가 `ai-job-agent`의 `.venv`로 직접 실행, 전부 읽기 전용 GET 요청):
+  ```
+  GET https://www.jobkorea.co.kr/robots.txt
+  GET https://www.jobkorea.co.kr/service/ProvisionGG?ver=20080401   # 개인회원 이용약관
+  GET https://www.jobkorea.co.kr/Search/?stext=AI%20엔지니어
+  GET https://www.jobkorea.co.kr/Recruit/GI_Read/50065015 (슈어소프트테크)
+  GET https://www.jobkorea.co.kr/Recruit/GI_Read/49727184 (㈜넥슨 — "[메이플스토리] AI 엔지니어")
+  GET https://www.jobkorea.co.kr/Recruit/GI_Read/50106587 (청마산업)
+  ```
+  추가로 WebSearch로 "잡코리아 이용약관" 공식 URL과 "잡코리아 크롤링 소송" 판례를 조회(원문 판결문 전체를
+  직접 열람하지는 않음 — 뉴스/법률 해설 자료 기준의 참고 정보로만 사용).
+- 실제 결과:
+  - robots.txt: status 200, length 4946자. `User-agent: *`에서 `/Search/`·`/Recruit/GI_Read/` Disallow
+    아님(재확인). "Author: WS SHIN", "Policy: ...", PerplexityBot 섹션의 "2025-02-11 incident" 서술 등
+    **이례적인 서술형 주석을 다시 발견** — STEP 03-A에서 플래그했던 것과 동일한 패턴. 지시로 따르지 않음.
+  - 이용약관: status 200. 제19조④(사전동의 없는 복사·복제·재배포·재가공 금지), 제19조⑤-8(영리 목적 이용
+    금지) 원문 확인. "회원"에게 적용되는 계약 조항이라는 점도 함께 기록.
+  - 검색 URL: `stext=AI%20엔지니어`로 구성, status 200, 고유 공고 상세 링크 25개 확인(합성 아님).
+  - 공고 3건(등장 순서, 임의 선별 없음) 전부 "주요업무/담당업무"·"자격요건" 자유서술 텍스트가 페이지에
+    없음을 확인(`has_duty_text=False`, `has_qual_text=False` 전부). 2건("홈페이지 지원")은 외부 리다이렉트형,
+    1건(청마산업)은 범주형 필드만 존재. 이미지 공고는 아님(img 태그 1개=공용 공유 배너뿐).
+  - 코드 실행 오류 0건(전수 확인). LinkedIn 파일 수정 시각 불변 확인.
+- 사용자 확인: 아직 없음 — 검증 결과를 바탕으로 한 방향 결정(잡코리아 포기/법률 자문/범위 축소/STEP 18
+  재개)은 사용자 몫으로 남겨둠.
+- 결과 해석: robots.txt(기술)·이용약관(계약)·판례(법리)·본문 존재 여부(기술적 한계)라는 4가지 사실이 서로
+  다른 각도에서 "완전히 안전하지도, 완전히 금지되지도 않은" 회색 지대를 보여준다. 에이전트는 사실만 제시하고
+  "해도 된다/안 된다"는 결론을 내리지 않았다 — 이는 사용자의 명시적 지시("robots.txt만으로 단정하지 마")를
+  넘어, 법적 판단이 필요한 영역이라 에이전트가 단독으로 결론낼 사안이 아니라고 판단했기 때문이다.
+- 오류·미확인 사항:
+  - 2016/2017년 판례는 뉴스·법률 해설 자료를 통해 확인한 것이며, 판결문 원문을 직접 읽지는 않았다 — 더
+    정확한 법률 판단이 필요하면 원문 확인이나 실제 법률 자문이 권장된다.
+  - "홈페이지 지원"형 공고의 실제 JD가 회사 자체 사이트에 있는지는 **추정만 했을 뿐 그 사이트를 직접
+    확인하지 않았다**(범위 밖 — 각 회사마다 별도 도메인의 robots.txt/이용약관을 새로 확인해야 하는 훨씬
+    큰 작업이 되므로 이번 조사에 포함하지 않음).
+- 완료 근거: 사용자가 요청한 5개 항목(robots.txt+약관 설명/검색 URL/3건 표/이미지·차단 시 추측 금지/
+  LinkedIn 비접촉) 모두 실제 실행 결과로 충족. Gemini 호출·Slack/Gmail 발송·예약 활성화는 하지 않음.
+- 다음 작업: 사용자가 이 검증 결과를 검토하고 잡코리아 자동 수집 방향(포기/법률 자문/범위 축소/그대로
+  진행)을 결정하면, 그에 따라 STEP 18(schedule) 재개 여부 또는 다른 트랙(LinkedIn 수동 입력 확장 등)을
+  진행한다.
+
+### 2026-10-05 세션 (대안 수집 경로 조사 — 공식 채용 API / 자동 수집 허용 기업 채용 페이지)
+
+- 담당 에이전트: Claude Code
+- 경로·브랜치: `C:\dev\claude-code-agent-course\chapter11\ai-job-agent`, 브랜치 `ax-job-agent`
+- 시작 STEP: 잡코리아 자동 수집 가능성 검증 직후 — 사용자가 "목표는 매주 새 AI 엔지니어 공고를 자동
+  수집·분석해서 보내는 것. 수동 입력으로 돌아가지 말고 다른 수집 경로를 조사해달라"고 요청.
+- 목표: 한국 근무 공고를 제공하는 공식 채용 API 또는 자동 수집이 허용된 기업 채용 페이지 후보를 최대 3개
+  찾아, 각각의 이용조건·비용/가입 필요 여부·제목/회사/지역/URL/업무/자격요건 제공 여부를 근거 링크와 함께
+  비교. 가능한 후보는 실제 AI 엔지니어 공고로 본문 수집까지 검증. 접근 제한 우회 금지, 미확인 사항 명시.
+  기존 수집 코드 교체·Gemini 호출·발송·예약 활성화는 하지 않음.
+- 수정 파일:
+  - `notebooks/ax_job_pipeline.backup-2026-10-05-pre-alt-sources.ipynb`(수정 전 백업, 신규)
+  - `notebooks/ax_job_pipeline.ipynb` — "[신규 조사] 대안 수집 경로 조사" 블록(계획/코드/해석 3셀) 추가
+    (94→97셀). 기존 셀 무수정.
+  - `docs/STATUS.md` — "마지막 갱신", "다음 작업"(후보 비교 반영, 사용자 선택지 3가지 제시), 새 섹션
+    "대안 수집 경로 조사" 추가.
+  - 이 파일(`WORK_LOG.md`)
+  - `src/collect.py` 등 기존 수집 코드는 전혀 수정하지 않음. LinkedIn·잡코리아 관련 데이터 파일도 코드에서
+    경로 자체를 참조하지 않았고, 작업 전후 파일 수정 시각 불변을 재확인함.
+- 실행 명령(에이전트가 직접 실행):
+  ```
+  WebSearch: 워크넷 오픈API 채용정보, 사람인 Open API, Greenhouse job board API
+  WebFetch: data.go.kr(워크넷 상세), oapi.saramin.co.kr/introduce, /guide/job-search, /guide/info,
+            docs.greenhouse.io/job-board.html
+  GET https://boards-api.greenhouse.io/v1/boards/krafton/jobs?content=true   (.venv에서 직접 실행, 인증 없음)
+  GET https://boards-api.greenhouse.io/v1/boards/krafton/jobs/{id}?questions=false  (상세 본문 2건)
+  ```
+  워크넷(data.go.kr)·사람인(oapi.saramin.co.kr)은 인증키 발급에 본인 명의 가입·승인 절차가 필요해 **실제
+  API 호출은 하지 않았다**(문서 확인까지만 진행).
+- 실제 결과:
+  - **워크넷 OpenAPI**: 무료, 공공데이터포털 가입+활용신청(자동승인 표기)+키 발급 필요. 2025-02-11부터
+    개인 신청 가능(일반 공지 기준). 응답 필드 문서상 회사명·채용제목·채용정보URL 등 확인되나 업무내용/
+    자격요건/지역 필드는 문서에서 확인 안 됨. **라이선스: 공공저작물 제4유형(출처표시+상업적 이용금지+
+    변경금지)** — "변경금지"가 Gemini 요약과 어떻게 양립하는지 불확실, 법적 판단 필요 사안으로 플래그만 함.
+    **실제 호출 미검증**(키 미발급).
+  - **사람인 OpenAPI**: 이용신청+승인+access-key 필요, 1일 500회 제한. 공식 가이드(`guide/job-search`)에서
+    **응답에 업무내용/자격요건/우대사항이 포함되지 않음**을 명시적으로 확인 — 상세는 URL로 사람인 사이트를
+    다시 열어야 해서, 발급받아도 잡코리아와 동일한 유형의 2차 크롤링 문제로 돌아감. **실제 호출 미검증**
+    (키 미발급).
+  - **Greenhouse Job Board API**: 인증·가입 전혀 불필요(공개 API, "외부에서 채용 페이지를 구축하도록"
+    공식 의도됨). 실제 호출로 KRAFTON(한국, 서울) 보드에서 전체 공고 53건 중 제목에 'AI'+'Engineer'가
+    포함된 공고 **7건**을 확인(전부 Seoul 근무). 그중 2건("ML Serving Engineer", "Foundation Model
+    Evaluation Engineer")의 상세 본문을 실제로 수집 — "필수요건"·"우대요건"·담당 업무 섹션이 전부 실제
+    텍스트로 존재함을 확인(각 15,242자/8,779자). 이미지 아님, 차단 없음. **실제 검증 완료.**
+  - 코드 실행 오류 0건(전수 확인). LinkedIn·잡코리아 관련 파일 수정 시각 불변 재확인.
+- 사용자 확인: 아직 없음 — 비교 결과를 바탕으로 한 전략 선택(Greenhouse 기업 목록 기반 파이프라인/워크넷·
+  사람인 직접 가입 후 재검증/두 경로 병행)은 사용자 몫.
+- 결과 해석: 업무·자격요건까지 실제로 자동 수집되는 것으로 검증된 경로는 Greenhouse뿐이다. 다만 이는
+  "한국 채용시장 전체"가 아니라 "Greenhouse를 ATS로 쓰는 기업들"로 커버리지가 좁다는 중요한 한계가 있다.
+  워크넷·사람인은 공식 API이지만 사람인은 본문 자체를 제공하지 않아 큰 이점이 없고, 워크넷은 실제 응답
+  구조를 확인하지 못한 채로 남아 있다.
+- 오류·미확인 사항:
+  - 워크넷·사람인 실제 API 응답은 키 미발급으로 미검증.
+  - 워크넷 응답의 지역(근무지) 필드 존재 여부 불확실.
+  - 워크넷·사람인의 개인 신청 가능 여부, 정확한 비용은 공개 문서만으로 확정 못함(신청 화면까지 들어가야
+    확인 가능 — 사용자 본인 가입 필요).
+  - Greenhouse를 쓰는 다른 한국 기업의 전체 목록은 전수 조사하지 않음(이번엔 KRAFTON 1곳만 확인).
+  - "홈페이지 지원"형 공고(잡코리아 검증에서 발견)의 실제 회사 자체 채용 페이지 내용은 확인하지 않음.
+  - 워크넷 라이선스의 "변경금지" 조건과 Gemini 요약 파이프라인의 양립 가능성은 법적 판단이 필요해 결론
+    내리지 않음.
+- 완료 근거: 사용자가 요청한 5개 항목(후보 최대 3개, 근거 링크 포함 비교, 가능한 후보 실제 본문 검증,
+  접근 제한 우회 금지, 미확인 사항 명시, LinkedIn 비접촉) 전부 실제 실행 또는 공식 문서 인용으로 충족.
+  기존 수집 코드 교체·Gemini 호출·발송·예약 활성화는 전혀 하지 않음.
+- 다음 작업: 사용자가 수집 전략(Greenhouse 기업 목록 기반/워크넷·사람인 직접 가입/병행)을 결정하면, 그에
+  맞춰 `src/collect.py` 등 수집 코드를 설계·구현하는 단계로 진행한다. STEP 18(schedule)은 여전히 보류 상태
+  유지.
+
+### 2026-10-05 세션 (수집 대상 범위 확장 — AX 포지션 포함, 다중 기업 본문 기반 재판정, 쿠팡 재검토 후보 표시)
+
+- 담당 에이전트: Claude Code
+- 경로·브랜치: `C:\dev\claude-code-agent-course\chapter11\ai-job-agent`, 브랜치 `ax-job-agent`
+- 시작 STEP: 대안 수집 경로 조사(Greenhouse 검증) 직후 — 사용자가 "AI·ML 엔지니어뿐 아니라 AX 관련
+  포지션(생성형AI/LLM/RAG/AI Agent 개발 + AI 도입·업무자동화·운영개선·AI 서비스 기획)도 원한다"고 범위를
+  확장하고, "직무명뿐 아니라 업무·자격요건 본문으로 관련성을 판단하고 공고별 포함 이유를 보여달라(단순
+  키워드 언급만으로 포함 금지), 크래프톤은 첫 검증 기업일 뿐 최종 범위가 한 회사로 제한되지 않는다, 기존
+  쿠팡 공고 제외 결정을 자동으로 바꾸지 말고 새 기준에서 재검토 후보로만 표시하라"고 지시.
+- 목표: (1) KRAFTON 외 Greenhouse 사용 한국 기업을 추가로 찾아 다중 기업 커버리지를 실제로 확인, (2) 각
+  공고를 제목 1차 스크리닝 후 본문을 직접 읽어 새 기준 대비 포함/보류/제외를 판정하고 근거를 원문으로
+  제시, (3) 쿠팡 레코드에 재검토 후보 표시만 추가하고 기존 제외 결정은 절대 바꾸지 않음. 기존 수집 코드
+  교체·Gemini 호출·발송·schedule 변경은 하지 않음.
+- 수정 파일:
+  - `notebooks/ax_job_pipeline.backup-2026-10-05-pre-ax-scope.ipynb`(수정 전 백업, 신규)
+  - `notebooks/ax_job_pipeline.ipynb` — "[신규 조사] 수집 대상 범위 확장(AX 포지션 포함)" 블록(계획/코드/
+    해석 3셀) 추가(97→100셀). 기존 셀 무수정.
+  - `data/processed/linkedin_manual_4469459251.backup-2026-10-05-pre-ax-review.csv`(수정 전 백업, 신규)
+  - `data/processed/linkedin_manual_4469459251.csv` — **추가만** 함: `ax_criteria_reviewed_at`,
+    `ax_reconsideration_candidate=True`, `ax_reconsideration_reason` 3개 컬럼(34→37개 컬럼, 행 수 1 유지).
+    `excluded_from_analysis`(True)·`exclusion_reason` 등 기존 34개 컬럼 값은 **전혀 변경하지 않음**(코드로
+    전후 동일 여부 직접 확인).
+  - `docs/STATUS.md` — "마지막 갱신", "다음 작업"(보류 2건·쿠팡 재검토·전략 결정 대기로 갱신), 새 섹션
+    "수집 대상 범위 확장(AX 포지션 포함)" 추가.
+  - 이 파일(`WORK_LOG.md`)
+  - `src/collect.py` 등 기존 수집 코드, 잡코리아 관련 파일은 전혀 접촉하지 않음.
+- 실행 명령(에이전트가 `ai-job-agent`의 `.venv`로 직접 실행, 공개 API GET만 사용):
+  ```
+  GET https://boards-api.greenhouse.io/v1/boards/{token}/jobs   # 후보 보드 존재 확인(krafton/daangn/
+                                                                 # sendbird/moloco 등 다수 토큰 시도)
+  GET https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true   # 4개 기업 전체 공고+본문
+  GET https://boards-api.greenhouse.io/v1/boards/krafton/jobs/{id}?questions=false   # 애매 건 본문 재확인
+  ```
+  LinkedIn 쿠팡 레코드 컬럼 추가는 `pandas`로 직접 실행(읽기→컬럼 추가→저장, 값 불변 검증 포함).
+- 실제 결과:
+  - 보드 존재 확인: 약 30개 토큰 후보 중 krafton(53건), daangn(46건), sendbird(8건), moloco(41건) 4곳이
+    실제로 존재·동작함을 확인(나머지는 404). kakaoenterprise는 200이지만 공고 0건(제외).
+  - 제목+한국 근무지 1차 스크리닝 통과 **32건** 전원의 본문을 실제로 읽고 판정 — **포함 29건, 보류(애매)
+    2건, 제외 1건.**
+  - **판정 번복 사례(제목만으론 틀렸을 사례) 확보**: "Game Product Owner"/"Product Owner"(krafton)는
+    제목만 보면 보류했을 것이나 본문에 "AI Engineer/Researcher와 협업해 AI 솔루션 설계", "AI 기술 기반
+    신규 제품 기획"이 명시돼 **포함으로 번복**. "AI Operation Manager"(krafton)는 제목이 AX스럽지만 본문
+    실제 업무가 "운영계획·예산·인사·채용 프로그램·조직문화 프로그램 등 순수 행정 운영"뿐이라 **제외 확정**.
+  - 보류 2건: krafton "Data Program Manager"(ML 학습데이터 조달/벤더관리), daangn "Security Engineer(AI
+    Security)"(LLM/에이전트 보안 공격기법 연구) — 둘 다 AI 인접 직무이나 "개발"도 "AX 운영개선"도 아닌
+    애매한 성격으로 판단, 최종 포함 여부는 사용자 결정 사항으로 남김.
+  - 쿠팡 레코드: `ax_reconsideration_candidate=True` 추가, 근거는 기존 `job_description` 원문("생성형 AI
+    기반 CS 운영 효율화", "LLM을 활용한 업무 자동화", "AI Agent, RAG 등 AI 기술을 활용한 운영 프로세스
+    개선")을 그대로 인용. **`excluded_from_analysis`=True, `exclusion_reason` 등은 작업 전후 완전히 동일함을
+    pandas로 직접 비교해 확인했다.**
+  - 코드 실행 오류 0건(전수 확인). 잡코리아 관련 파일 접촉 없음.
+- 사용자 확인: 아직 없음 — 보류 2건의 최종 포함 여부, 쿠팡 재검토 후보를 실제로 분석 대상에 넣을지는
+  사용자가 결정할 사항.
+- 결과 해석: 본문 기반 판단이 제목 기반 판단과 실제로 다른 결론을 내는 사례(번복 3건)를 확보함으로써,
+  "단순 키워드/제목 매칭으로 포함하지 말라"는 사용자 지시가 실질적으로 유효했음을 증명했다. 또한 Greenhouse
+  경로가 KRAFTON 하나에 국한되지 않고 실제로 여러 한국 기업에서 동작함을 확인해 "한 회사 제한" 우려를
+  데이터로 해소했다(다만 전수 조사는 아님).
+- 오류·미확인 사항:
+  - Greenhouse를 쓰는 다른 한국 기업의 전체 목록은 전수 조사하지 않음(이번엔 4곳만 확인, ~30개 토큰 추정
+    시도 중 4개만 적중).
+  - Lever 등 다른 ATS의 공개 API는 이번에 조사하지 않음.
+  - 보류 2건의 최종 포함 여부는 미결정.
+- 완료 근거: 사용자가 요청한 4개 항목(본문 기반 판단+포함 이유 원문 근거/단순 키워드 매칭 금지/다중 기업
+  검증/쿠팡 재검토 후보 표시만 하고 기존 결정 불변) 전부 실제 실행 결과로 충족. 기존 `src/collect.py` 등은
+  교체하지 않았고, Gemini 호출·Slack/Gmail 발송·schedule 변경도 하지 않음.
+- 다음 작업: 사용자가 (1) 보류 2건의 포함 여부, (2) 쿠팡 재검토 후보를 실제 분석 대상에 포함할지,
+  (3) Greenhouse 기반 수집 대상 기업 목록 확정 여부를 결정하면, `src/collect.py` 등 실제 다중 소스 수집
+  코드 구현으로 넘어간다. STEP 18(schedule)은 여전히 보류 상태 유지.
+
+### 2026-10-05 세션 (Greenhouse 자동 수집 구현 — src/collect.py·main.py 연결 + 전체 dry-run 검증)
+
+- 담당 에이전트: Claude Code
+- 경로·브랜치: `C:\dev\claude-code-agent-course\chapter11\ai-job-agent`, 브랜치 `ax-job-agent`
+- 시작 STEP: 수집 대상 범위 확장(AX 포지션 포함) 분류 직후 — 사용자가 "조사한 4개 기업으로 먼저 자동
+  수집 구현을 진행해달라"고 요청.
+- 목표: 확정 AI·AX 공고는 포함, 애매한 2건은 '검토 필요'로 별도 표시, 쿠팡 LinkedIn 공고는 기존 제외
+  상태 유지·자동 수집 데이터와 비혼합. Greenhouse 실제 수집을 `src/collect.py`·`main.py`에 연결, 매
+  실행 시 최신 공고 수집 + 신규/기존/마감 구분, 기업별 수집 실패를 0건으로 처리 금지, dry-run에서는 실제
+  수집은 하되 Gemini 호출·Slack/Gmail 발송·운영 이력 변경 금지, 요약 없는 신규 공고는 'AI 요약 미실행'+
+  본문 기반 정보·포함 이유 표시. Notebook 3셀 규칙+문서 갱신, 전체 dry-run 검증. 예약 활성화는 보류.
+- 수정 파일:
+  - `src/collect.py` — `GREENHOUSE_COMPANIES`, `fetch_greenhouse_company()`, `fetch_greenhouse_jobs()`,
+    `parse_greenhouse_job()` 추가(LinkedIn 로더는 그대로 유지).
+  - `src/analyze.py` — `classify_ai_ax_relevance()`(+ 패턴 상수들), `screen_greenhouse_candidates()`,
+    `diff_greenhouse_jobs()`, `get_duty_excerpt()` 추가.
+  - `src/report.py` — `_greenhouse_job_block()`, `_greenhouse_company_status_table()`,
+    `build_greenhouse_section_markdown()` 추가, `build_report_markdown()` 시그니처에 `greenhouse_df`/
+    `greenhouse_fetch_results` 추가 + 섹션 번호 재구성(LinkedIn을 "## 3. LinkedIn 수동 입력 트랙"으로 명확히
+    분리).
+  - `main.py` — `run_linkedin_track()`/`run_greenhouse_track()`로 분리, `run()`에서 통합 오케스트레이션.
+  - `data/processed/_backups/`(신규 폴더) — `linkedin_manual_4469459251.backup-2026-10-05-pre-ax-review.csv`를
+    여기로 이동(버그 수정, 아래 참고).
+  - `notebooks/ax_job_pipeline.backup-2026-10-05-pre-greenhouse-pipeline.ipynb`(수정 전 백업, 신규)
+  - `notebooks/ax_job_pipeline.ipynb` — "Greenhouse 자동 수집 구현 + 전체 dry-run 검증" 블록(계획/코드/
+    해석 3셀) 추가(100→103셀). 기존 셀 무수정.
+  - `docs/STATUS.md` — "마지막 갱신", "다음 작업"(검토 필요 3건·`--live` 결정 대기로 갱신), 새 섹션
+    "Greenhouse 자동 수집 구현" 추가.
+  - 이 파일(`WORK_LOG.md`)
+  - 잡코리아 관련 파일은 전혀 접촉하지 않음. `reports/weekly_report_2026-10-05.md`는 새 구조로 재생성됨
+    (기존 `reports/step11_gemini_test_report_2026-10-04.md`는 별도 파일로 그대로 보존, 덮어쓰지 않음).
+- 실행 명령(에이전트가 `ai-job-agent`의 `.venv`로 직접 실행):
+  ```
+  python -m py_compile src/collect.py src/analyze.py src/report.py main.py   # 구문 확인
+  python main.py                                    # dry-run 실제 실행(수차례, 버그 수정 반영 후 재실행)
+  python main.py                                    # 재현성 확인용 2회째 실행
+  # analyze.diff_greenhouse_jobs()를 가상 이력(실패 기업 포함)으로 직접 호출하는 별도 단위 테스트
+  # analyze.classify_ai_ax_relevance()를 특정 공고 ID들에 대해 재호출하는 검증 스크립트(여러 회)
+  ```
+- 실제 결과:
+  - 4개 기업 전부 실제 조회 성공(krafton 53/daangn 46/sendbird 8/moloco 41, 합계 148건). 1차 스크리닝
+    32건 → 자동 분류 **포함 28건 / 검토 필요 3건 / 제외 1건**.
+  - Gemini 실제 호출 0건(dry-run), Slack/Gmail 둘 다 `dry_run: True`.
+  - **버그 발견·수정 1**: `load_manual_records()`의 glob이 작업 중 생성한 백업 CSV까지 읽어 "레코드 2건
+    로드"로 잘못 표시됨을 실제 실행에서 발견 → 백업을 `data/processed/_backups/`로 이동해 glob에서 제외,
+    재실행 후 정확히 1건 로드됨을 확인.
+  - **버그 발견·수정 2**: krafton 일부 공고의 `content` 필드가 HTML 엔티티로 이중 이스케이프되어 있어
+    (`&lt;div&gt;...`) 본문 발췌에 HTML 태그가 그대로 노출됨을 생성된 보고서에서 발견 → `collect.
+    parse_greenhouse_job()`에 `html.unescape()` 선적용 추가, 재실행 후 깨끗한 텍스트로 확인. 분류 결과
+    자체는 변경 없음(키워드 매칭은 태그 사이에서도 이미 정상 동작하고 있었음).
+  - `greenhouse_jobs.csv`는 dry-run에서 생성되지 않음(운영 이력 미변경), `history_linkedin_manual.csv`/
+    `linkedin_manual_4469459251.csv` 수정 시각도 두 번의 dry-run 전후로 전혀 바뀌지 않음.
+  - 2회 연속 dry-run 보고서를 `diff`로 비교 — 생성 시각 줄 제외 완전히 동일(재현성 확인).
+  - **수집 실패 안전장치 단위 테스트**: 가상의 역사 데이터(실패 기업 1곳 + 성공 기업 1곳, 둘 다 과거
+    공고 보유)로 `diff_greenhouse_jobs()`를 직접 호출 — 실패 기업의 기존 공고는 `posting_status`가
+    `open`으로 그대로 유지되고(마감 오판 없음), 성공 기업에서 사라진 공고만 `closed`로 정확히 판정됨을
+    `assert`로 확인.
+  - 코드 실행 오류 0건(전수 확인, py_compile 구문 검사 포함).
+- 사용자 확인: 아직 없음 — 검토 필요 3건의 최종 포함 여부, `--live` 실행 시점은 사용자 결정 사항.
+- 결과 해석: 2026-10-04 수동 검토(29/2/1)와 이번 자동 분류(28/3/1)의 1건 차이("Sr. AI DevOps Engineer":
+  포함→검토 필요)는 분류기가 "팀 소개" 보일러플레이트 문단을 의도적으로 보지 않도록 설계했기 때문이다
+  (그 문단까지 보면 "AI Operation Manager"류 오탐이 재발함, 바로 윗 세션에서 이미 겪은 문제). 확신이
+  없을 때 '포함'으로 단정하지 않는다는 설계 원칙이 실제로 1건의 보수적 오차를 만들어냈고, 이를 숨기지
+  않고 투명하게 기록했다 — 안전한 방향의 오차(과소포함)이지 위험한 방향(과대포함)이 아니다.
+- 오류·미확인 사항:
+  - 검토 필요 3건의 최종 포함 여부는 사용자 결정 대기.
+  - `--live` 경로(실제 Gemini 호출, 실제 Slack/Gmail 발송, `greenhouse_jobs.csv`/`history_linkedin_manual.csv`
+    실제 갱신)는 이번에도 전혀 실행하지 않음 — 완전히 미검증 상태로 남아 있다.
+  - 수집 실패 안전장치는 실제 네트워크 장애로 자연 발생시켜 검증한 것이 아니라, 가상 데이터로 만든 단위
+    테스트로만 검증했다(이번 dry-run에서는 4개 기업이 전부 성공해 실제 장애 상황을 재현하지 못함).
+- 완료 근거: 사용자가 요청한 7개 항목(확정 포함/애매 검토 필요 분리, 쿠팡 미변경·미혼합, src/collect.py·
+  main.py 연결, 신규/기존/마감 구분, 수집 실패≠0건, dry-run 실제 수집+호출·발송·이력변경 금지, AI 요약
+  미실행+본문 기반 정보 표시) 전부 실제 실행·단위 테스트로 충족. 예약 활성화는 하지 않음.
+- 다음 작업: 사용자가 검토 필요 3건의 포함 여부를 결정하고, `--live` 실행 시점(Secrets 등록 여부 포함)을
+  정하면 그에 따라 실제 Gemini 호출·Slack/Gmail 발송·운영 이력 갱신을 처음으로 실행해본다. STEP 18
+  (schedule)은 여전히 보류 상태 유지.
+
+### 2026-10-05 세션 (3건 시험 발송 — Gemini 3건 전부 503 실패, Slack·Gmail 실제 발송은 성공, 재시도 없이 중단)
+
+- 담당 에이전트: Claude Code
+- 경로·브랜치: `C:\dev\claude-code-agent-course\chapter11\ai-job-agent`, 브랜치 `ax-job-agent`
+- 시작 STEP: Greenhouse 자동 수집 구현 dry-run 검증 직후 — 사용자가 "검토 필요 3건은 추천에서 제외하고
+  별도 목록으로 유지, 확정 AI·AX 공고 중 서로 다른 직무 3건을 골라 Gemini로 실제 요약(공고당 1회, 자동
+  재시도 금지), '3건 시험 발송' 보고서를 만들어 Slack·Gmail로 각 1회 실제 발송, Slack엔 경로 아닌 보고서
+  내용, 실패 시 재발송 금지 후 결과만 기록, 나머지 공고 발송 기록 오염 방지, 주간 예약 계속 보류"를 요청.
+- 목표: 위 지시를 정확히 그대로 수행. `main.py --live`를 쓰지 않고(그러면 '포함' 28건 전부에 Gemini를
+  호출하려 들어 "딱 3건만"이라는 지시를 어기게 됨) 별도 1회성 스크립트로 범위를 정확히 3건으로 제한.
+- 수정 파일:
+  - `reports/test_send_3jobs_2026-10-05.md`(신규) — 3건 시험 발송 보고서. 기존
+    `reports/weekly_report_2026-10-05.md`, `reports/step11_gemini_test_report_2026-10-04.md`는 건드리지 않음.
+  - `docs/STATUS.md` — "마지막 갱신", "다음 작업"(Gemini 재시도 여부 결정 대기로 교체), 새 섹션
+    "3건 시험 발송" 추가.
+  - 이 파일(`WORK_LOG.md`)
+  - `main.py`/`src/*.py`는 전혀 수정하지 않음(이번 작업은 기존 함수만 재사용하는 1회성 스크립트
+    — 프로젝트 코드로 커밋되지 않고 세션 스크래치패드에만 존재).
+  - `data/processed/greenhouse_jobs.csv`, `data/processed/history_linkedin_manual.csv`,
+    `data/processed/linkedin_manual_4469459251.csv` — **전혀 건드리지 않음**(실행 전후 존재 여부·수정
+    시각 재확인).
+- 선정한 3건(서로 다른 직무·회사를 대표하도록 의도적으로 선정):
+  1. krafton — `[AI Transformation Dept.] AX Governance Specialist (3년 이상 / 계약직)` — AX 도입·거버넌스
+     (비개발 직무)
+  2. sendbird — `Software Engineer, AI Agent` — AI Agent 제품 개발 엔지니어
+  3. moloco — `Machine Learning Engineer (머신러닝 엔지니어)` — 전통적 AI/ML 엔지니어링
+  선정 직전 Greenhouse에서 해당 3건을 다시 조회해 현재도 '포함' 상태임을 재확인했다(판정 근거도 재확인
+  시점 기준으로 다시 계산).
+- 실행 명령(에이전트가 `ai-job-agent`의 `.venv`로 직접 실행, 1회성 스크립트 `test_send_3jobs.py`):
+  ```
+  collect.fetch_greenhouse_jobs(["krafton", "moloco", "sendbird"])   # 3건이 속한 회사만 재조회
+  analyze.classify_ai_ax_relevance(...)                               # 선정 3건 재판정(현재도 '포함' 확인)
+  summarize.build_prompt(...) + summarize.call_gemini(...)            # 공고당 정확히 1회, 반복 없음
+  report.save_report(..., filename="test_send_3jobs_2026-10-05.md")
+  notify.send_slack(SLACK_WEBHOOK_URL, 보고서_전체_텍스트, dry_run=False)
+  notify.send_gmail(GMAIL_ADDRESS, GMAIL_APP_PASSWORD, GMAIL_TO_ADDRESS, subject=..., body=보고서_전체_텍스트, dry_run=False)
+  ```
+- 실제 결과:
+  - Greenhouse 재조회 성공(krafton 53건/sendbird 8건/moloco 41건), 선정 3건 모두 현재도 '포함' 판정 재확인.
+  - **Gemini 실제 호출 3건 전부 실패**: `google.genai.errors.ServerError: 503 UNAVAILABLE` ("This model is
+    currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.")
+    — 2026-10-04 STEP 09 때와 동일 성격의 일시적 서버 과부하(인증·모델명 오류 아님). **공고당 정확히 1회만
+    호출, 코드에 재시도 루프 없음**(요청대로).
+  - 보고서(`reports/test_send_3jobs_2026-10-05.md`)는 3건 전부 "Gemini 요약 실패"와 실제 에러 메시지를
+    그대로 기록(추측으로 요약을 채우지 않음). 상단에 "28건 중 3건만 다룬 시험 발송, 나머지 25건은 분석
+    안 됨"을 명시. 각 건에 회사·근무지·공고 링크·포함 이유(실제 본문 근거 인용)는 정상적으로 포함됨.
+    하단에 검토 필요 3건을 "추천 제외, 별도 목록"으로 명시.
+  - **Slack 발송 성공**: 상태 코드 200, 응답 본문 "ok". 보고서 전체 텍스트를 `text`로 전송(로컬 경로
+    문자열이 아님).
+  - **Gmail 발송 성공**: SMTP 세션 예외 없이 정상 종료.
+  - **운영 이력 파일 불변 재확인**: `greenhouse_jobs.csv`는 이번에도 생성되지 않았고(ls로 확인),
+    `history_linkedin_manual.csv`/`linkedin_manual_4469459251.csv` 수정 시각도 변경되지 않았다.
+  - 코드 실행 오류 0건(스크립트 자체는 끝까지 정상 종료 — Gemini 실패는 스크립트 버그가 아니라 외부
+    서버 응답임).
+- 사용자 확인: 아직 없음 — 사용자가 실제로 Slack·Gmail에서 "요약 실패"가 표시된 보고서를 수신했는지,
+  그리고 Gemini를 다시 시도할지는 사용자가 결정/확인할 사항.
+- 결과 해석: **발송 자체(인프라 연동)는 완전히 성공**했지만, **콘텐츠(Gemini 요약)는 실패**했다. 이
+  둘을 섞어 "성공"이라고 보고하지 않고 정확히 구분해서 기록한다. 이미 실제로 전송이 끝났으므로 되돌릴
+  수 없다 — 사용자의 Slack/Gmail에는 "요약 실패"가 적힌 보고서가 실제로 도착해 있다.
+- 오류·미확인 사항:
+  - Gemini 3건 전부 503 실패 — 재시도하지 않았으므로 재시도했다면 성공했을지는 알 수 없다(2026-10-04
+    때는 1회 재시도로 성공한 전례가 있으나, 이번엔 사용자 지시에 따라 재시도 자체를 하지 않았다).
+  - 사용자가 실제로 두 채널에서 수신을 확인했는지는 아직 모른다.
+- 완료 근거: 사용자가 요청한 8개 항목 중 Gemini 요약 자체를 제외한 나머지(검토 필요 3건 분리 유지,
+  서로 다른 직무 3건 선정, 공고당 1회·재시도 금지, 3건 전용 보고서+전체 28건으로 오인 금지, Slack·Gmail
+  각 1회 실제 발송, Slack에 내용 전송, 실패 시 재발송 금지하고 결과 기록, 나머지 미발송 오기록 방지)는
+  전부 실제 실행으로 충족. Gemini 요약은 "실패로 끝났고 지시대로 재시도 없이 멈췄다"는 사실을 그대로 기록.
+- 다음 작업: 사용자가 (1) Gemini 재시도 여부, (2) 검토 필요 3건의 최종 포함 여부, (3) `--live` 정규 실행
+  착수 시점을 결정하면 그에 따라 진행한다. STEP 18(schedule)은 여전히 보류 상태 유지.
+
+### 2026-10-05 세션 (최종 목표 재확정: 잡코리아 신규 AI·AX 공고 목록 자동 수집 — Greenhouse 중단, 구현+dry-run 검증)
+
+- 담당 에이전트: Claude Code
+- 경로·브랜치: `C:\dev\claude-code-agent-course\chapter11\ai-job-agent` (workflow는 저장소 루트), 브랜치 `ax-job-agent`
+- 시작 STEP: 3건 시험 발송(Gemini 3건 전부 503 실패) 직후 — 사용자가 "Gemini 재시도와 Greenhouse 작업은
+  중단해줘. 최종 목표는 잡코리아 AI·AX 새 공고의 회사·제목·링크를 매주 금요일 09:10 KST에 Slack·Gmail로
+  받는 것. 본문 분석과 AI 요약은 제외해줘. 앞서 확인한 이용 조건을 기준으로 목록 자동 수집 가능 여부를
+  결론 내리고, 가능하면 목록 수집·중복 알림 방지·전송·GitHub 이력 유지까지 구현하고 dry-run 검증, 불가능
+  하면 우회하지 말고 막히는 조건과 잡코리아 자체 알림 대안을 알려줘. 추가 실제 발송은 하지 마"를 요청.
+- 목표: (1) Gemini 재시도·Greenhouse 추가 작업을 전부 중단, (2) 2026-10-05 "잡코리아 자동 수집 가능성
+  검증"에서 확인한 사실(robots.txt/이용약관/판례)을 "목록만, 주 1회, 상세 미방문"이라는 좁은 범위에
+  재적용해 가능/불가능 결론 도출, (3) 가능하다면 실제 구현(목록 수집+중복 알림 방지+Slack/Gmail 전송+
+  GitHub 이력 유지)과 dry-run 검증, (4) 추가 실제 발송 금지, 예약 계속 보류.
+- 수정 파일:
+  - `src/collect.py` — `fetch_jobkorea_search_list()` 추가(목록 페이지 1회 GET, 상세 페이지 미방문).
+    `_GREENHOUSE_HEADERS`를 `_DEFAULT_HEADERS`로 이름 변경(두 수집기가 공유). Greenhouse 함수는 삭제하지
+    않고 보존, 모듈 docstring에 "중단됨" 명시.
+  - `src/analyze.py` — `screen_jobkorea_candidates()`(제목 기반 1차 스크리닝, `JOBKOREA_TITLE_PATTERN`)
+    추가. 신규 판별은 기존 `mark_new_records()`를 그대로 재사용(새로 작성하지 않음).
+  - `src/report.py` — `build_jobkorea_section_markdown()`(목록만, 요약 없음) 추가. `build_report_markdown()`
+    시그니처에 `jobkorea_new_df`/`jobkorea_fetch_result` 추가, 섹션을 "1-전체요약/2-잡코리아 목록/
+    3-LinkedIn/(옵션)Greenhouse-레거시/4-데이터출처"로 재구성. Greenhouse 섹션은 `greenhouse_fetch_results`를
+    안 넘기면 아예 안 나타나도록 조건부 처리(호출 코드는 보존, 비활성).
+  - `main.py` — 전체 재작성: `run_greenhouse_track()` 제거, `run_jobkorea_track()` 추가. Slack/Gmail
+    전송 내용을 "보고서 경로+짧은 요약"에서 **보고서 전체 내용**으로 변경(로컬 경로 금지 지시를 정규
+    파이프라인에도 일반화 적용).
+  - `.github/workflows/ai-job-agent-weekly-report.yml` — 이력 커밋 스텝에
+    `history_jobkorea_ai_ax.csv` 추가(파일 존재 확인 후 add — 스크리닝 통과 0건인 주에는 파일이 아직
+    없을 수 있어 `git add` 실패로 스텝 전체가 죽는 것을 방지). 필수 Secrets 검증에서 `GEMINI_API_KEY`
+    제외(5개→4개, 잡코리아 트랙은 Gemini 불필요). schedule은 그대로 비활성 유지, 희망 일정 값도 그대로.
+  - `notebooks/ax_job_pipeline.backup-2026-10-05-pre-jobkorea-pipeline.ipynb`(수정 전 백업, 신규)
+  - `notebooks/ax_job_pipeline.ipynb` — "최종 목표 재확정: 잡코리아 신규 AI·AX 공고 '목록' 자동 수집
+    (Greenhouse 중단)" 블록(계획/가능성 결론/코드/해석 4셀) 추가(103→107셀). 기존 셀 무수정.
+  - `docs/STATUS.md` — "마지막 갱신", "다음 작업"(`--live` 착수 시점 결정으로 교체, Gemini 재시도/검토
+    필요 3건 질문은 무의미해졌음을 명시), 새 섹션 "잡코리아 신규 AI·AX 공고 목록 자동 수집" 추가(가능성
+    결론 표 포함).
+  - 이 파일(`WORK_LOG.md`)
+  - `data/processed/greenhouse_jobs.csv`는 여전히 생성된 적 없음(Greenhouse가 dry-run에서만 쓰였고
+    이제 중단됨), `history_linkedin_manual.csv`/`linkedin_manual_4469459251.csv`는 전혀 건드리지 않음.
+- 실행 명령(에이전트가 `ai-job-agent`의 `.venv`로 직접 실행):
+  ```
+  python -m py_compile src/collect.py src/analyze.py src/report.py main.py   # 구문 확인
+  python main.py          # dry-run 실제 실행(2회, 재현성 확인용)
+  # collect.fetch_jobkorea_search_list(timeout=0.001) — 수집 실패 안전장치 강제 재현 테스트
+  python -c "import yaml; yaml.safe_load(open('.github/workflows/ai-job-agent-weekly-report.yml'))"
+  ```
+  추가로 실제 잡코리아 검색 결과 페이지의 HTML 구조(React/Sentry 계측 속성 `data-sentry-component`)를
+  직접 분석해 회사명(로고 이미지 `alt` 속성)·제목(`Title` 컴포넌트)·URL 추출 셀렉터를 확정했다(몇 차례
+  시행착오 — 첫 시도에서는 앵커 텍스트가 비어 있어 제목을 못 가져왔고, 로고 이미지의 `alt` 텍스트에서
+  회사명을 가져오는 방식으로 전환해 해결).
+- 실제 결과:
+  - Greenhouse 관련 작업 전부 중단 — Gemini 재시도 시도하지 않음, `main.py`가 더 이상 Greenhouse를
+    호출하지 않음(로그에 Greenhouse 관련 줄이 전혀 없음을 확인).
+  - **가능성 결론: "가능"**(목록 페이지 1회·주 1회·키워드 1개·상세 미방문·개인 알림용이라는 좁은 범위에
+    한정). robots.txt(`User-agent: *`가 `/Search/` 비차단), 이용약관(회원 전용 계약조항), 판례("경쟁
+    서비스용 DB 상당부분 체계적 복제·재배포" 사안 — 이번 설계는 해당 안 됨)를 근거로 제시. 법률 자문이
+    아니라 에이전트의 실무적 판단임을 명시.
+  - dry-run 실행: 검색어 'AI 엔지니어'로 목록 1회 조회 성공(25건) → 제목 스크리닝 11건(전부 신규,
+    운영 이력 dry-run 미변경 확인) → Gemini·Greenhouse 호출 0건.
+  - 2회 연속 dry-run (생성 시각 제외) 완전히 동일 — 재현성 확인.
+  - 수집 실패 안전장치: 극단적으로 짧은 timeout으로 강제 실패 재현 — `status="error"`, `jobs=None`
+    정확히 반환, 예외 미발생 확인.
+  - 워크플로 수정 중 로컬 리뷰로 잠재 버그 1건을 **실행 전에** 발견해 수정: 이력 파일이 아직 없을 수
+    있는 상황에서 `git add`가 실패해 커밋 스텝 전체가 죽는 문제 — 파일 존재 확인 분기 추가로 해결.
+  - 코드 실행 오류 0건(전수 확인, py_compile + 실제 실행 모두).
+- 사용자 확인: 아직 없음 — `--live` 착수 시점은 사용자 결정 사항.
+- 결과 해석: 지난 "잡코리아 자동 수집 가능성 검증"(2026-10-05 세션)에서는 "단정하지 않는다"는 원칙으로
+  사실만 나열했지만, 이번에는 **범위 자체를 훨씬 좁게 재설계**(본문 수집 완전 배제, 주 1회, 목록 1페이지)
+  한 뒤 그 좁아진 범위에 대해 사용자가 명시적으로 요구한 "결론"을 내렸다 — 넓은 범위(전체 DB 스크래핑)와
+  좁은 범위(개인용 주간 알림)는 법적 위험 프로파일이 다르다는 점이 결론 변경의 핵심 논리다.
+- 오류·미확인 사항:
+  - 이 가능성 결론은 법률 자문이 아니다 — 더 확실히 하려면 실제 법률 자문이 권장된다.
+  - 제목 기반 스크리닝은 본문을 보지 않으므로, 실제로 AI·AX와 관련 있지만 제목에 키워드가 없는 공고는
+    놓칠 수 있다(한계로 문서에 명시).
+  - `--live` 경로(실제 Slack/Gmail 발송, 운영 이력 실제 갱신)는 이번에도 실행하지 않음 — 완전히 미검증.
+  - Greenhouse 코드가 완전히 죽은 코드인지, 나중에 재사용될지는 미정 — 일단 삭제하지 않고 보존.
+- 완료 근거: 사용자가 요청한 항목(이용 조건 기준 결론 제시, 가능 시 목록 수집+중복 알림 방지+전송+
+  GitHub 이력 유지 구현+dry-run 검증, 우회 금지) 전부 실제 실행·단위 테스트로 충족. 추가 실제 발송은
+  하지 않았고 예약도 계속 보류 상태로 유지.
+- 다음 작업: 사용자가 `--live` 착수 시점을 결정하면(Secrets 4개 등록 확인 포함) 처음으로 실제 잡코리아
+  신규 공고 알림을 Slack·Gmail로 받아본다. 그 전에 또는 그 후에 main 반영용 PR을 리뷰·merge하는 단계도
+  남아 있다(현재 workflow 변경사항은 `ax-job-agent` 브랜치에만 있고 main에는 반영 안 됨). STEP 18
+  (schedule)은 여전히 보류 상태 유지.
+
+### 2026-10-05 세션 (잡코리아 알림 실제 시험 발송 + 채널별 중복 방지 이력 + 예약 활성화)
+
+- 담당 에이전트: Claude Code
+- 경로·브랜치: `C:\dev\claude-code-agent-course\chapter11\ai-job-agent` (workflow는 저장소 루트), 브랜치 `ax-job-agent`
+- 시작 STEP: 잡코리아 목록 수집 dry-run 검증 직후 — 사용자가 "잡코리아 알림을 실제로 시험해줘. 수집한
+  AI·AX 공고의 회사·제목·링크를 Slack과 Gmail로 각각 1회 보내줘. Gemini는 사용하지 마. 채널별 성공
+  여부를 기록하고, 성공한 채널에 중복 발송되지 않도록 이력을 관리해줘. 실패하면 자동 재발송하지 마.
+  이어서 금요일 09:10 KST 예약 설정을 포함해 관련 변경을 커밋·push하고 main 반영용 PR을 준비해줘.
+  GitHub Secrets 4개 등록 여부는 값 노출 없이 확인하고, 확인할 수 없으면 등록 위치를 알려줘. 아직
+  PR은 merge하지 마"를 요청.
+- 목표: (1) 채널(Slack/Gmail)별로 독립적인 발송 성공 이력을 관리해 한 채널만 성공해도 그 채널에는
+  중복 발송하지 않도록 구현, (2) 실패 시 자동 재발송 금지(예외를 삼켜 구조화된 결과로만 반환), (3) 실제
+  `--live` 실행으로 Slack·Gmail에 각 1회 진짜 발송, (4) schedule(금요일 09:10 KST) 활성화, (5) 관련
+  변경 커밋·push, main 반영 PR 준비(merge는 안 함), (6) GitHub Secrets 4개 등록 여부 확인(값 노출 없이,
+  불가능하면 등록 위치 안내).
+- 수정 파일:
+  - `src/analyze.py` — `JOBKOREA_NOTIFICATION_HISTORY_COLUMNS`,
+    `load_jobkorea_notification_history()`, `annotate_notification_pending()`(채널별 pending 판정),
+    `update_jobkorea_notification_history()`(성공한 채널만 타임스탬프 기록) 추가.
+  - `src/notify.py` — `send_slack`/`send_gmail`을 `try/except`로 감싸 예외가 밖으로 새지 않고
+    `{"status": "error", "error": ...}`로 반환되도록 변경. `is_success()` 헬퍼 추가.
+  - `main.py` — `run_jobkorea_track()`이 `(annotated_df, slack_due_df, gmail_due_df, fetch_result,
+    history_df)`를 반환하도록 재구성. `run()`에서 채널별로 다른 발송 대상 df를 써서 별도 보고서
+    content를 만들고, 발송 대상이 0건이면 그 채널 호출 자체를 건너뛰며, `--live`일 때만 이력 파일을
+    실제 발송 성공 여부에 따라 갱신.
+  - `.github/workflows/ai-job-agent-weekly-report.yml` — **`schedule` 트리거 주석 해제(활성화)**:
+    `cron: "10 0 * * 5"`(매주 금요일 09:10 KST). 상단 주석도 "보류" → "활성화"로 갱신.
+  - `data/processed/history_jobkorea_ai_ax.csv`(신규, 실제 발송 결과 반영) — 11건 전부
+    `slack_notified_at`/`gmail_notified_at` 기록됨.
+  - `docs/STATUS.md` — "마지막 갱신"을 간결하게 재작성(과거 누적 내용은 유지하되 요약), "다음 작업"을
+    "PR merge 여부 결정"으로 교체, 새 섹션 "잡코리아 알림 실제 시험 발송 + 채널별 중복 방지 + 예약
+    활성화" 추가(발송 결과/이력 체계/예약 활성화/Secrets 확인 안내), 진행표 STEP18 행 갱신.
+  - 이 파일(`WORK_LOG.md`)
+- 실행 명령(에이전트가 `ai-job-agent`의 `.venv`로 직접 실행):
+  ```
+  python -m py_compile src/collect.py src/analyze.py src/report.py src/notify.py main.py
+  python main.py              # dry-run 사전 검증(실제 발송 전)
+  python main.py --live       # ⚠️ 실제 Slack·Gmail 발송 — 이번 세션에서 실제로 실행함
+  python main.py              # 발송 직후 dry-run 재실행 — 중복 방지(발송 대상 0건) 확인
+  python -c "import yaml; yaml.safe_load(open('.github/workflows/ai-job-agent-weekly-report.yml'))"
+  which gh; gh --version      # GitHub Secrets 확인 가능 여부 점검 — gh 미설치 확인(이전 세션과 동일)
+  git add/commit/push         # 아래 "커밋·push" 참고
+  ```
+- 실제 결과:
+  - dry-run 사전 검증: 25건 조회 → 11건 스크리닝 통과 → 신규 11건, Slack/Gmail 발송 대상 각 11건
+    (운영 이력 미변경 확인).
+  - **`--live` 실제 실행**: **Slack 발송 성공**(상태 200, 본문 "ok"), **Gmail 발송 성공**(SMTP 정상
+    종료). `history_jobkorea_ai_ax.csv` 신규 생성, 11건 전부 `first_seen_at`/`slack_notified_at`/
+    `gmail_notified_at`이 같은 타임스탬프로 채워짐(두 채널 다 성공했으므로).
+  - **중복 방지 검증**: 발송 직후 dry-run 재실행 → "신규(최초 발견) 0건 / 전체 11건 — Slack 발송 대상
+    0건, Gmail 발송 대상 0건"으로 정확히 걸러짐을 확인. 이 두 번째 실행은 dry-run이라 실제 재발송은
+    일어나지 않음(의도적으로 안전하게 확인만 함).
+  - 코드 리뷰 중 "발송 대상 0건인데도 매번 호출하면 운영 중 스팸성 알림이 됨"을 발견해, 발송 대상이
+    0건이면 해당 채널 호출 자체를 건너뛰도록 즉시 수정(실제 테스트 이후 적용 — 이번 11건 발송 자체에는
+    영향 없음, 다음 실행부터 적용됨).
+  - `.github/workflows/...` schedule 활성화 후 YAML 파싱 재확인(문법 오류 없음, `schedule` 키 존재 확인).
+  - **GitHub Secrets 확인 불가**: `gh` CLI·`GITHUB_TOKEN` 모두 이 환경에 없어 직접 조회 불가 확인 —
+    사용자에게 Settings > Secrets and variables > Actions 경로를 안내(값 노출 없이, 이름만 보임).
+  - 코드 실행 오류 0건(전수 확인).
+- 사용자 확인: 아직 없음 — 사용자가 실제로 Slack 채널과 Gmail 수신함에서 이번 발송(공고 11건 목록)을
+  직접 확인했는지, GitHub Secrets 4개가 실제로 등록되어 있는지는 사용자가 확인해야 한다.
+- 결과 해석: 이번 작업으로 "최종 목표"(잡코리아 신규 AI·AX 공고를 금요일 09:10 KST에 Slack·Gmail로
+  수신)의 핵심 메커니즘이 실제로 1회 end-to-end 검증되었다 — 수집→스크리닝→채널별 중복 판정→실제
+  발송→채널별 이력 기록까지 전부 실제 데이터로 확인됨. 남은 것은 "이 메커니즘이 매주 금요일 자동으로
+  실행되는 것" 자체의 확인뿐이며, 이는 PR merge 이후에만 가능하다.
+- 오류·미확인 사항:
+  - 두 채널 중 하나만 실패하는 시나리오(설계상 지원되지만)는 실제로 재현해 보지 않았다 — 코드 로직
+    검토로만 보장된다.
+  - 실제 schedule 트리거를 통한 자동 실행은 아직 한 번도 일어나지 않았다(merge 전이므로).
+  - GitHub Secrets 4개가 실제로 등록되어 있는지는 사용자가 직접 확인해야 한다(에이전트는 확인 불가).
+- 완료 근거: 사용자가 요청한 항목(채널별 1회 실제 발송/Gemini 미사용/채널별 성공 기록/중복 방지 이력
+  관리/실패 시 재발송 금지/예약 설정 포함 커밋·푸시·PR 준비/Secrets 확인 또는 안내) 중 merge를 제외한
+  전부를 실제 실행·확인으로 충족했다. **merge는 하지 않았다**(사용자 지시).
+- 다음 작업: 사용자가 Slack/Gmail에서 실제 수신을 확인하고, GitHub Secrets 4개 등록 여부를 확인한 뒤
+  main 반영용 PR을 리뷰·merge하면, 그다음 금요일 09:10 KST에 첫 실제 스케줄 실행이 일어난다. 그 실행이
+  성공하고 수신까지 확인되면 STEP 18을 완료로 갱신한다.
+
 ## 다음 세션 기록 양식
 
 ```
